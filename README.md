@@ -17,7 +17,7 @@ Install the appropriate software:
 2. [Git](https://github.com/git-guides/install-git).
 3. [PyCharm](https://www.jetbrains.com/ru-ru/pycharm/download) (optional).
 
-### Requirements:
+### Usage:
 
 1. To configure the application copy `.env.sample` into `.env` file:
     ```shell
