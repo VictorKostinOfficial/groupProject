@@ -4,7 +4,6 @@ import json
 from flask import Flask, jsonify, request, Response
 from flask_cors import CORS, cross_origin
 
-
 from connections.influx_connection import InfluxConnection
 from connections.postgres_connection import PostgresConnection
 from logger import get_logger
@@ -88,6 +87,34 @@ async def companies_by_city_id(city_id: int):
     return await postgres_connection.get_companies_by_city_id(city_id)
 
 
+# guide
+
+@app.route('/guide', methods=['GET', 'POST'])
+async def guide() -> str:
+    """
+    Обрабатывает GET запрос /guide
+    :return: str
+    """
+    check_postgres_connection()
+
+    if request.method == 'GET':
+        return await postgres_connection.get_guide()
+    elif request.method == 'POST':
+        data = request.get_json()
+        return await postgres_connection.post_guide(data)
+
+
+@app.route('/guide/<id>', methods=['DELETE'])
+async def remove_guide(id: int) -> str:
+    """
+    Обрабатывает DELETE запрос удаления /guide/id
+    :return: str
+    """
+    check_postgres_connection()
+
+    return await postgres_connection.delete_guide_record_by_id(id)
+
+
 # %% gas_analyzers
 @app.route('/gas_analyzers', methods=['POST', 'GET'])
 async def gas_analyzers() -> str:
@@ -104,18 +131,18 @@ async def gas_analyzers() -> str:
         return await postgres_connection.post_gas_analyzer(data)
 
 
-@app.route('/gas_analyzers/<id>', methods=['DELETE', 'GET'])
-async def gas_analyzers_by_id(id: int) -> str:
+@app.route('/gas_analyzers/<measurement>', methods=['DELETE', 'GET'])
+async def gas_analyzers_by_id(measurement: str) -> str:
     """
-    Обрабатывает DELETE и GET запросы /gas_analyzers/{id}
+    Обрабатывает DELETE и GET запросы /gas_analyzers/{measurement}
     :return: str
     """
     check_postgres_connection()
 
     if request.method == 'GET':
-        return await postgres_connection.get_gas_analyzer_by_id(id)
+        return await postgres_connection.get_gas_analyzer_by_measurement(measurement)
     elif request.method == "DELETE":
-        return await postgres_connection.delete_gas_analyzer_by_id(id)
+        return await postgres_connection.delete_gas_analyzer_by_measurement(measurement)
 
 
 @app.route('/gas_analyzers/city/<city_id>', methods=['GET'])
@@ -145,18 +172,18 @@ async def gas_pipes() -> str:
         return await postgres_connection.post_pipe(data)
 
 
-@app.route('/pipes/<id>', methods=['DELETE', 'GET'])
-async def pipes_by_id(id: int) -> str:
+@app.route('/pipes/<measurement>', methods=['DELETE', 'GET'])
+async def pipes_by_id(measurement: str) -> str:
     """
-    Обрабатывает DELETE и GET запросы /pipes/<id>
+    Обрабатывает DELETE и GET запросы /pipes/<measurement>
     :return: str
     """
     check_postgres_connection()
 
     if request.method == 'GET':
-        return await postgres_connection.get_pipe_by_id(id)
+        return await postgres_connection.get_pipe_by_measurement(measurement)
     elif request.method == "DELETE":
-        return await postgres_connection.delete_pipe_by_id(id)
+        return await postgres_connection.delete_pipe_by_measurement(measurement)
 
 
 @app.route('/pipes/company/<company_id>', methods=['GET'])
@@ -211,6 +238,28 @@ async def weather_from_influx():
 @app.route('/')
 def hello_world():  # put application's code here
     return 'Hello World!'
+
+
+@app.route('/calculate', methods=['GET'])
+async def calculate_heatmap():
+    check_influx_connection()
+
+    if request.method == 'GET':
+        longitude = float(request.args.get('longitude'))
+        latitude = float(request.args.get('latitude'))
+        winddirection = float(request.args.get('winddirection'))
+        return await calculation(longitude, latitude, winddirection)
+
+
+async def calculation(longitude: float, latitude: float, winddirection: float):
+    """
+    Ждем код от Мишы
+    """
+
+    return json.dumps({
+        "code": int(40),
+        "message": str("Doesn't implement yet")
+    }, ensure_ascii=False)
 
 
 def check_postgres_connection():
